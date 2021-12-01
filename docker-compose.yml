@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    image: goos-book-code-app
+    container_name: app
+    networks:
+      - e2e
+    volumes:
+      # - $PWD/src:/usr/src/src
+      - $PWD/src/main/java/XMPPTest.java:/usr/src/src/main/java/XMPPTest.java
+      - $PWD/environments/gradle/settings.gradle:/usr/src/settings.gradle
+      - $PWD/environments/gradle/build.gradle:/usr/src/build.gradle
+      - $PWD/environments/mysql/mysql-connector-java-5.1.34-bin.jar:/usr/src/mysql-connector-java-5.1.34-bin.jar
+
+  db:
+    build: environments/mysql/
+    image: goos-book-code-mysql
+    container_name: db
+    networks:
+      - e2e
+    platform: linux/x86_64
+    environment:
+      MYSQL_DATABASE: openfire
+      MYSQL_USER: my-user
+      MYSQL_PASSWORD: my-pw
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+    volumes:
+      - $PWD/environments/mysql/conf.d:/etc/mysql/conf.d
+      - $PWD/log/mysql:/var/log/mysql
+      - initdb:/docker-entrypoint-initdb.d
+
+  openfire:
+    build: environments/openfire/
+    image: goos-book-code-openfire
+    container_name: openfire
+    networks:
+      - e2e
+    ports:
+      - "9090:9090"
+    volumes:
+      - initdb:/opt/initdb.d
+
+networks:
+  e2e:
+
+volumes:
+  initdb:
